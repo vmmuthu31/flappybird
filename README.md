@@ -36,8 +36,8 @@ Make sure you have the following installed before the workshop:
 2. **Install dependencies:**
 
    ```bash
-   npm install
-   # or bun install / yarn install
+   bun install
+   # or npm install / yarn install
    ```
 
 3. **Run the development server:**

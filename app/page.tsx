@@ -220,7 +220,14 @@ export default function App() {
         playAudio(dingAudioRef);
         localStorage.setItem("highestScore", score.toString());
       }
+    }
+    return () => {
+      if (t) clearTimeout(t);
+    };
+  }, [gameOver, score, highestScore]);
 
+  useEffect(() => {
+    if (gameOver) {
       const win = window as any;
       if (typeof window !== "undefined" && win.ethereum) {
         setTimeout(() => setIsSubmittingScore(true), 0);
@@ -238,10 +245,7 @@ export default function App() {
           });
       }
     }
-    return () => {
-      if (t) clearTimeout(t);
-    };
-  }, [gameOver, score, highestScore]);
+  }, [gameOver, score]);
 
   useEffect(() => {
     if (gameOver) {
