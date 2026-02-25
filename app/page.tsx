@@ -85,7 +85,7 @@ export default function App() {
   const [flapSprite, setFlapSprite] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  const { isConnected } = useAccount();
+  const { isConnected, isConnecting, isReconnecting } = useAccount();
   const [leaderboard, setLeaderboard] = useState<
     { player: string; score: number }[]
   >([]);
@@ -381,6 +381,16 @@ export default function App() {
   return (
     <div className="App" onClick={handleScreenClick}>
       <div
+        style={{
+          position: "absolute",
+          top: "20px",
+          right: "20px",
+          zIndex: 100,
+        }}
+      >
+        <ConnectButton showBalance={false} />
+      </div>
+      <div
         className={`overlay ${gamePaused || gameOver ? "overlay-dark" : ""}`}
         style={{ display: gamePaused ? "block" : "none" }}
       />
@@ -487,7 +497,13 @@ export default function App() {
               style={{ left: "100px", bottom: `${birdPosition}px` }}
             />{" "}
           </div>
-          {isConnected ? (
+          {isConnecting || isReconnecting ? (
+            <h1
+              style={{ marginTop: "20px", fontSize: "1.2em", color: "#FFD700" }}
+            >
+              LOADING WALLET...
+            </h1>
+          ) : isConnected ? (
             <>
               <h1>PRESS SPACE TO START</h1>
               {leaderboard.length > 0 && (
@@ -524,15 +540,6 @@ export default function App() {
               <h2 style={{ fontSize: "0.8em" }}>
                 Connect your wallet to play and compete on-chain!
               </h2>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  marginTop: "20px",
-                }}
-              >
-                <ConnectButton />
-              </div>
             </>
           )}
         </div>
