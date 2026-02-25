@@ -1,6 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, RefObject } from "react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useAccount } from "wagmi";
+import { ethers } from "ethers";
+import {
+  getLeaderboard,
+  submitScoreToContract,
+} from "./services/contractService";
 
 const backgroundImage = "/Images/bgdia.png";
 const baseImage = "/Images/basex5.jpg";
@@ -78,6 +85,11 @@ export default function App() {
   const [flapSprite, setFlapSprite] = useState(true);
   const [mounted, setMounted] = useState(false);
 
+  const { isConnected } = useAccount();
+  const [leaderboard, setLeaderboard] = useState<
+    { player: string; score: number }[]
+  >([]);
+
   useEffect(() => {
     const t = setTimeout(() => {
       setMounted(true);
@@ -87,6 +99,20 @@ export default function App() {
         setHighestScore(parseInt(savedHighestScore, 10));
       }
     }, 0);
+
+    const fetchLeaderboard = async () => {
+      try {
+        const provider = new ethers.providers.JsonRpcProvider(
+          "https://api-mezame.shardeum.org",
+        );
+        const data = await getLeaderboard(provider);
+        setLeaderboard(data);
+      } catch (e) {
+        console.error("Leaderboard fetch error:", e);
+      }
+    };
+    fetchLeaderboard();
+
     return () => clearTimeout(t);
   }, []);
 
@@ -108,6 +134,7 @@ export default function App() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!gameStarted && e.keyCode === 32) {
+        if (!isConnected) return;
         setGameStarted(true);
         playAudio(dingAudioRef);
       } else if (gameStarted && !gamePaused && e.keyCode === 32) {
@@ -120,7 +147,7 @@ export default function App() {
         setGamePaused((prevPaused) => !prevPaused);
       }
     },
-    [gameStarted, gamePaused, gameOver, handleJump],
+    [gameStarted, gamePaused, gameOver, handleJump, isConnected],
   );
 
   const restartGame = useCallback(() => {
@@ -145,6 +172,7 @@ export default function App() {
 
   const handleScreenClick = useCallback(() => {
     if (!gameStarted) {
+      if (!isConnected) return;
       setGameStarted(true);
       playAudio(dingAudioRef);
     } else if (!gamePaused && !gameOver) {
@@ -152,7 +180,7 @@ export default function App() {
     } else if (gameOver) {
       restartGame();
     }
-  }, [gameStarted, gamePaused, gameOver, handleJump, restartGame]);
+  }, [gameStarted, gamePaused, gameOver, handleJump, restartGame, isConnected]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -174,6 +202,15 @@ export default function App() {
       t = setTimeout(() => setHighestScore(score), 0);
       playAudio(dingAudioRef);
       localStorage.setItem("highestScore", score.toString());
+
+      const win = window as any;
+      if (typeof window !== "undefined" && win.ethereum) {
+        const provider = new ethers.providers.Web3Provider(win.ethereum);
+        const signer = provider.getSigner();
+        submitScoreToContract(signer, score).then((res) =>
+          console.log("Score submitted:", res),
+        );
+      }
     }
     return () => {
       if (t) clearTimeout(t);
@@ -395,7 +432,38 @@ export default function App() {
               style={{ left: "100px", bottom: `${birdPosition}px` }}
             />{" "}
           </div>
-          <h1>PRESS SPACE TO START</h1>
+          {isConnected ? (
+            <h1>PRESS SPACE TO START</h1>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginTop: "20px",
+              }}
+            >
+              <ConnectButton />
+            </div>
+          )}
+          {isConnected && leaderboard.length > 0 && (
+            <div
+              style={{
+                marginTop: "30px",
+                fontSize: "0.5em",
+                textAlign: "center",
+              }}
+            >
+              <h2>Top 10 Leaderboard</h2>
+              <ol style={{ listStylePosition: "inside", padding: 0 }}>
+                {leaderboard.map((entry, idx) => (
+                  <li key={idx} style={{ margin: "5px 0" }}>
+                    {entry.player.slice(0, 6)}...{entry.player.slice(-4)} :{" "}
+                    {entry.score}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       )}
       <audio ref={dingAudioRef} src={ding} preload="auto" />
