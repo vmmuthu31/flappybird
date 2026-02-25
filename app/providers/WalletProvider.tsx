@@ -25,7 +25,9 @@ export const shardeumEvmTestnet = {
 
 const config = getDefaultConfig({
   appName: "Flappy Bird",
-  projectId: process.env.NEXT_PUBLIC_RAINBOW_PROJECT_ID!,
+  projectId:
+    process.env.NEXT_PUBLIC_RAINBOW_PROJECT_ID! ||
+    "495316edb8104828cbd48aa201d635a8",
   chains: [shardeumEvmTestnet],
   ssr: true,
 });
