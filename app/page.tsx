@@ -89,6 +89,8 @@ export default function App() {
   const [leaderboard, setLeaderboard] = useState<
     { player: string; score: number }[]
   >([]);
+  const [isSubmittingScore, setIsSubmittingScore] = useState(false);
+  const [canRestart, setCanRestart] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -163,11 +165,11 @@ export default function App() {
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
-      if (e.keyCode === 32 && gameOver) {
+      if (e.keyCode === 32 && gameOver && canRestart && !isSubmittingScore) {
         restartGame();
       }
     },
-    [gameOver, restartGame],
+    [gameOver, restartGame, canRestart, isSubmittingScore],
   );
 
   const handleScreenClick = useCallback(() => {
@@ -177,10 +179,19 @@ export default function App() {
       playAudio(dingAudioRef);
     } else if (!gamePaused && !gameOver) {
       handleJump();
-    } else if (gameOver) {
+    } else if (gameOver && canRestart && !isSubmittingScore) {
       restartGame();
     }
-  }, [gameStarted, gamePaused, gameOver, handleJump, restartGame, isConnected]);
+  }, [
+    gameStarted,
+    gamePaused,
+    gameOver,
+    handleJump,
+    restartGame,
+    isConnected,
+    canRestart,
+    isSubmittingScore,
+  ]);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -198,24 +209,40 @@ export default function App() {
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
-    if (score > highestScore) {
+    if (gameOver && score > highestScore) {
       t = setTimeout(() => setHighestScore(score), 0);
       playAudio(dingAudioRef);
       localStorage.setItem("highestScore", score.toString());
 
       const win = window as any;
       if (typeof window !== "undefined" && win.ethereum) {
+        setTimeout(() => setIsSubmittingScore(true), 0);
         const provider = new ethers.providers.Web3Provider(win.ethereum);
         const signer = provider.getSigner();
-        submitScoreToContract(signer, score).then((res) =>
-          console.log("Score submitted:", res),
-        );
+        submitScoreToContract(signer, score)
+          .then((res) => {
+            console.log("Score submitted:", res);
+            setTimeout(() => setIsSubmittingScore(false), 0);
+            getLeaderboard(provider).then(setLeaderboard);
+          })
+          .catch((err) => {
+            console.error(err);
+            setTimeout(() => setIsSubmittingScore(false), 0);
+          });
       }
     }
     return () => {
       if (t) clearTimeout(t);
     };
-  }, [score, highestScore]);
+  }, [gameOver, score, highestScore]);
+
+  useEffect(() => {
+    if (gameOver) {
+      setTimeout(() => setCanRestart(false), 0);
+      const t = setTimeout(() => setCanRestart(true), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [gameOver]);
 
   useEffect(() => {
     const flapInterval = setInterval(() => {
@@ -417,34 +444,17 @@ export default function App() {
       {gameOver && (
         <div className="pause-message">
           <h1>GAME OVER</h1>
+          <h1>SCORE: {score}</h1>
           <h1>HIGHEST SCORE: {highestScore}</h1>
-          <h1>PRESS SPACE TO RESTART</h1>
-        </div>
-      )}
-      {!gameStarted && !gameOver && (
-        <div className="start-message">
-          <h1>FLAPPY BIRD</h1>
-          <div className="bird-container">
-            <img
-              src={flapSprite ? birdFlyingImage : birdImage}
-              alt="Bird"
-              className="start-bird"
-              style={{ left: "100px", bottom: `${birdPosition}px` }}
-            />{" "}
-          </div>
-          {isConnected ? (
-            <h1>PRESS SPACE TO START</h1>
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                marginTop: "20px",
-              }}
-            >
-              <ConnectButton />
-            </div>
-          )}
+
+          {isSubmittingScore ? (
+            <h2 style={{ color: "yellow", marginTop: "10px" }}>
+              Submitting Score to Web3... Check Wallet!
+            </h2>
+          ) : canRestart ? (
+            <h1 style={{ marginTop: "10px" }}>PRESS SPACE TO RESTART</h1>
+          ) : null}
+
           {isConnected && leaderboard.length > 0 && (
             <div
               style={{
@@ -463,6 +473,67 @@ export default function App() {
                 ))}
               </ol>
             </div>
+          )}
+        </div>
+      )}
+      {!gameStarted && !gameOver && (
+        <div className="start-message">
+          <h1>FLAPPY BIRD</h1>
+          <div className="bird-container">
+            <img
+              src={flapSprite ? birdFlyingImage : birdImage}
+              alt="Bird"
+              className="start-bird"
+              style={{ left: "100px", bottom: `${birdPosition}px` }}
+            />{" "}
+          </div>
+          {isConnected ? (
+            <>
+              <h1>PRESS SPACE TO START</h1>
+              {leaderboard.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "30px",
+                    fontSize: "0.5em",
+                    textAlign: "center",
+                  }}
+                >
+                  <h2>Top 10 Leaderboard</h2>
+                  <ol style={{ listStylePosition: "inside", padding: 0 }}>
+                    {leaderboard.map((entry, idx) => (
+                      <li key={idx} style={{ margin: "5px 0" }}>
+                        {entry.player.slice(0, 6)}...{entry.player.slice(-4)} :{" "}
+                        {entry.score}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <h1
+                style={{
+                  marginTop: "20px",
+                  fontSize: "1.2em",
+                  color: "#FFD700",
+                }}
+              >
+                WELCOME TO WEB3 FLAPPY BIRD
+              </h1>
+              <h2 style={{ fontSize: "0.8em" }}>
+                Connect your wallet to play and compete on-chain!
+              </h2>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  marginTop: "20px",
+                }}
+              >
+                <ConnectButton />
+              </div>
+            </>
           )}
         </div>
       )}
