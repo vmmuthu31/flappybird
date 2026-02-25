@@ -37,13 +37,6 @@ export const submitScoreToContract = async (
 ) => {
   try {
     const contract = getContract(signer);
-
-    // The contract requires a signature from the owner. Since the user requested
-    // a pure frontend implementation without a backend private key, we will attempt
-    // to pass a dummy signature or let the user sign it themselves if they are the owner.
-
-    // Attempting to sign the payload with the connected wallet (in case the connected wallet IS the owner)
-    // payload to sign: msg.sender + score + address(this)
     const playerAddress = await signer.getAddress();
 
     const messageHash = ethers.utils.solidityKeccak256(
@@ -54,7 +47,6 @@ export const submitScoreToContract = async (
     const messageHashBytes = ethers.utils.arrayify(messageHash);
     const signature = await signer.signMessage(messageHashBytes);
 
-    // Call submitScore
     const tx = await contract.submitScore(score, signature);
     await tx.wait();
 
