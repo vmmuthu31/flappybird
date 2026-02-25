@@ -9,9 +9,7 @@ import { polygonAmoy } from "viem/chains";
 
 const config = getDefaultConfig({
   appName: "Flappy Bird",
-  projectId:
-    process.env.NEXT_PUBLIC_RAINBOW_PROJECT_ID! ||
-    "495316edb8104828cbd48aa201d635a8",
+  projectId: process.env.NEXT_PUBLIC_RAINBOW_PROJECT_ID! || "",
   chains: [polygonAmoy],
   ssr: true,
 });
