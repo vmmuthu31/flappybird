@@ -9,6 +9,12 @@ import {
   submitScoreToContract,
 } from "./services/contractService";
 
+interface TubeData {
+  x: number;
+  yUpper: number;
+  yLower: number;
+}
+
 const backgroundImage = "/Images/bgdia.png";
 const baseImage = "/Images/basex5.jpg";
 const birdImage = "/Images/pajaroaletabaja.png";
@@ -17,12 +23,6 @@ const tubeImage = "/Images/botpipe.png";
 const ding = "/audio/point.ogg";
 const hitSound = "/audio/hit.wav";
 const flapSound = "/audio/wing.ogg";
-
-interface TubeData {
-  x: number;
-  yUpper: number;
-  yLower: number;
-}
 
 const gravity = -0.4;
 const tubeWidth = 82;
