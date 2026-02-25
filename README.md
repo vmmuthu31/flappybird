@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🐦 Flappy Web3 — Building Games on Web3 Workshop
 
-## Getting Started
+**Takshashila 2026 | Chennai Institute of Technology**
 
-First, run the development server:
+Welcome to the official repository for the **"Building Games on Web3"** workshop! This project contains a Web3-integrated version of a Flappy Bird-style game built with Next.js and Solidity.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🎯 Workshop Objectives
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Understand the fundamentals of Web3 and Smart Contracts.
+- Learn how to integrate a decentralized backend (Smart Contracts) with a modern frontend (Next.js).
+- Build, deploy, and interact with the `Flappy.sol` contract.
+- Gain hands-on exposure to Web3 game development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Getting Started
 
-## Learn More
+### Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+Make sure you have the following installed before the workshop:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Node.js](https://nodejs.org/) (v18 or higher)
+- [Git](https://git-scm.com/)
+- A Web3 Wallet browser extension (e.g., MetaMask).
+- Code Editor (e.g., VS Code)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Installation
 
-## Deploy on Vercel
+1. **Clone the repository:**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```bash
+   git clone <your-repo-url>
+   cd flappybird
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Install dependencies:**
+
+   ```bash
+   npm install
+   # or bun install / yarn install
+   ```
+
+3. **Run the development server:**
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser:**
+   Navigate to [http://localhost:3000](http://localhost:3000) to see the game in action!
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js (App Router), React, TypeScript
+- **Smart Contracts:** Solidity (`contracts/Flappy.sol`)
