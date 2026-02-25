@@ -3,12 +3,8 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract FlappyBirdWeb3 is ERC721, Ownable {
-    using ECDSA for bytes32;
-    using MessageHashUtils for bytes32;
 
     uint256 public constant BRONZE_THRESHOLD = 10;
     uint256 public constant SILVER_THRESHOLD = 25;
@@ -28,35 +24,26 @@ contract FlappyBirdWeb3 is ERC721, Ownable {
     mapping(address => bool) public hasSilver;
     mapping(address => bool) public hasGold;
 
-    mapping(uint256 => uint8) public badgeTier; 
+    mapping(uint256 => uint8) public badgeTier;
 
+    event ScoreSubmitted(address indexed player, uint256 score);
     event NewHighScore(address indexed player, uint256 score);
     event BadgeMinted(address indexed player, uint8 tier, uint256 tokenId);
 
     constructor()
         ERC721("FlappyBirdBadges", "FLAP")
-        Ownable(msg.sender)
+        Ownable(msg.sender)   
     {}
 
-    function submitScore(
-        uint256 score,
-        bytes calldata signature
-    ) external {
-        require(score > highScores[msg.sender], "Score not higher");
+    function submitScore(uint256 score) external {
+        emit ScoreSubmitted(msg.sender, score);
 
-        bytes32 messageHash = keccak256(
-            abi.encodePacked(msg.sender, score, address(this))
-        ).toEthSignedMessageHash();
+        if (score > highScores[msg.sender]) {
+            highScores[msg.sender] = score;
+            emit NewHighScore(msg.sender, score);
+            _updateLeaderboard(msg.sender, score);
+        }
 
-        require(
-            messageHash.recover(signature) == owner(),
-            "Invalid score proof"
-        );
-
-        highScores[msg.sender] = score;
-        emit NewHighScore(msg.sender, score);
-
-        _updateLeaderboard(msg.sender, score);
         _mintEligibleBadges(msg.sender, score);
     }
 
@@ -82,16 +69,17 @@ contract FlappyBirdWeb3 is ERC721, Ownable {
         }
     }
 
-
     function _mintEligibleBadges(address player, uint256 score) internal {
         if (score >= BRONZE_THRESHOLD && !hasBronze[player]) {
             hasBronze[player] = true;
             _mintBadge(player, 1);
         }
+
         if (score >= SILVER_THRESHOLD && !hasSilver[player]) {
             hasSilver[player] = true;
             _mintBadge(player, 2);
         }
+
         if (score >= GOLD_THRESHOLD && !hasGold[player]) {
             hasGold[player] = true;
             _mintBadge(player, 3);
@@ -104,7 +92,6 @@ contract FlappyBirdWeb3 is ERC721, Ownable {
         _safeMint(to, tokenId);
         emit BadgeMinted(to, tier, tokenId);
     }
-
 
     function getTop10()
         external

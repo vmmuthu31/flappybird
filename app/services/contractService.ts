@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import abi from "../../contracts/abi/abi.json";
 
-const CONTRACT_ADDRESS = "0x84040C664ca961e184d0bD8b03E8e4DFbb02360c";
+const CONTRACT_ADDRESS = "0x8662160dEe4b2B66cE2F64BDf6F82c593a2bEeCe";
 
 export const getContract = (
   providerOrSigner: ethers.providers.Provider | ethers.Signer,
@@ -37,17 +37,7 @@ export const submitScoreToContract = async (
 ) => {
   try {
     const contract = getContract(signer);
-    const playerAddress = await signer.getAddress();
-
-    const messageHash = ethers.utils.solidityKeccak256(
-      ["address", "uint256", "address"],
-      [playerAddress, score, CONTRACT_ADDRESS],
-    );
-
-    const messageHashBytes = ethers.utils.arrayify(messageHash);
-    const signature = await signer.signMessage(messageHashBytes);
-
-    const tx = await contract.submitScore(score, signature);
+    const tx = await contract.submitScore(score);
     await tx.wait();
 
     return { success: true, tx };

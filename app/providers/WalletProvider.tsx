@@ -5,30 +5,14 @@ import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactNode } from "react";
-
-import { type Chain } from "viem";
-
-export const shardeumEvmTestnet = {
-  id: 8119,
-  name: "Shardeum EVM Testnet",
-  nativeCurrency: { name: "Shardeum", symbol: "SHM", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://api-mezame.shardeum.org"] },
-  },
-  blockExplorers: {
-    default: {
-      name: "Shardeum Explorer",
-      url: "https://explorer-mezame.shardeum.org",
-    },
-  },
-} as const satisfies Chain;
+import { polygonAmoy } from "viem/chains";
 
 const config = getDefaultConfig({
   appName: "Flappy Bird",
   projectId:
     process.env.NEXT_PUBLIC_RAINBOW_PROJECT_ID! ||
     "495316edb8104828cbd48aa201d635a8",
-  chains: [shardeumEvmTestnet],
+  chains: [polygonAmoy],
   ssr: true,
 });
 

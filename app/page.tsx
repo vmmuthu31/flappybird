@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, RefObject } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount } from "wagmi";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { ethers } from "ethers";
 import {
   getLeaderboard,
@@ -86,6 +86,9 @@ export default function App() {
   const [mounted, setMounted] = useState(false);
 
   const { isConnected, isConnecting, isReconnecting } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const isRightNetwork = chainId === 80002;
   const [leaderboard, setLeaderboard] = useState<
     { player: string; score: number }[]
   >([]);
@@ -105,7 +108,7 @@ export default function App() {
     const fetchLeaderboard = async () => {
       try {
         const provider = new ethers.providers.JsonRpcProvider(
-          "https://api-mezame.shardeum.org",
+          "https://polygon-amoy.drpc.org",
         );
         const data = await getLeaderboard(provider);
         setLeaderboard(data);
@@ -174,7 +177,7 @@ export default function App() {
 
   const handleScreenClick = useCallback(() => {
     if (!gameStarted) {
-      if (!isConnected) return;
+      if (!isConnected || !isRightNetwork) return;
       setGameStarted(true);
       playAudio(dingAudioRef);
     } else if (!gamePaused && !gameOver) {
@@ -189,6 +192,7 @@ export default function App() {
     handleJump,
     restartGame,
     isConnected,
+    isRightNetwork,
     canRestart,
     isSubmittingScore,
   ]);
@@ -209,10 +213,13 @@ export default function App() {
 
   useEffect(() => {
     let t: ReturnType<typeof setTimeout>;
-    if (gameOver && score > highestScore) {
-      t = setTimeout(() => setHighestScore(score), 0);
-      playAudio(dingAudioRef);
-      localStorage.setItem("highestScore", score.toString());
+
+    if (gameOver) {
+      if (score > highestScore) {
+        t = setTimeout(() => setHighestScore(score), 0);
+        playAudio(dingAudioRef);
+        localStorage.setItem("highestScore", score.toString());
+      }
 
       const win = window as any;
       if (typeof window !== "undefined" && win.ethereum) {
@@ -469,7 +476,7 @@ export default function App() {
             <div
               style={{
                 marginTop: "30px",
-                fontSize: "0.5em",
+                fontSize: "1em",
                 textAlign: "center",
               }}
             >
@@ -503,14 +510,14 @@ export default function App() {
             >
               LOADING WALLET...
             </h1>
-          ) : isConnected ? (
+          ) : isConnected && isRightNetwork ? (
             <>
               <h1>PRESS SPACE TO START</h1>
               {leaderboard.length > 0 && (
                 <div
                   style={{
                     marginTop: "30px",
-                    fontSize: "0.5em",
+                    fontSize: "0.8em",
                     textAlign: "center",
                   }}
                 >
@@ -525,6 +532,37 @@ export default function App() {
                   </ol>
                 </div>
               )}
+            </>
+          ) : isConnected && !isRightNetwork ? (
+            <>
+              <h1
+                style={{
+                  marginTop: "20px",
+                  fontSize: "1.2em",
+                  color: "#FF4444",
+                }}
+              >
+                WRONG NETWORK DETECTED
+              </h1>
+              <h2 style={{ fontSize: "0.8em" }}>
+                Please switch to the Polygon Amoy Testnet to play!
+              </h2>
+              <button
+                onClick={() => switchChain({ chainId: 80002 })}
+                style={{
+                  marginTop: "20px",
+                  padding: "10px 20px",
+                  fontSize: "1em",
+                  backgroundColor: "#FFD700",
+                  color: "#000",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                }}
+              >
+                Switch Network
+              </button>
             </>
           ) : (
             <>
